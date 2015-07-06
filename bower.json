@@ -1,0 +1,27 @@
+{
+  "name": "string-buffer",
+  "main": "string-buffer.js",
+  "version": "1.0.0",
+  "authors": [
+    "Raymond Pulver IV <raymond.pulver_iv@uconn.edu>"
+  ],
+  "description": "A binary Buffer implementation that stores its data in a string",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "binary",
+    "buffer",
+    "string"
+  ],
+  "license": "MIT",
+  "homepage": "http://github.com/raypulver/string-buffer",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
