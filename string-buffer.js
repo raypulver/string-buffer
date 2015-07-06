@@ -291,6 +291,9 @@
         }
         return ret;
       }).call(this) + '>';
+    },
+    get: function (offset) {
+      return this.buffer.charCodeAt(offset);
     }
   };
   Object.defineProperty(StringBuffer.prototype, "length", {
