@@ -81,7 +81,7 @@
       if (offset >= this.buffer.length || offset === -1) {
         this.buffer += addendum;
       } else {
-        this.buffer = this.buffer.substr(0, offset) + addendum; + this.buffer.substr(offset + 2);
+        this.buffer = this.buffer.substr(0, offset) + addendum + this.buffer.substr(offset + 2);
       }
       return offset + 2;
     },
@@ -328,13 +328,13 @@
     if (type === CHAR) {
       ret.push(val);
       return ret;
-    } else if (type === SIGNED | CHAR) {
+    } else if (type === (SIGNED | CHAR)) {
       return (val < 0 ? bytes(complement(-val, 8), CHAR) : bytes(val, CHAR));
     } else if (type === SHORT) {
       ret.push(val >>> 8);
       ret.push(val & 0xFF);
       return ret;
-    } else if (type === SIGNED | SHORT) {
+    } else if (type === (SIGNED | SHORT)) {
       return (val < 0 ? bytes(complement(-val, 16), SHORT) : bytes(val, SHORT));
     } else if (type === INT) {
       ret.push((val >>> 24) & 0xFF);
@@ -342,7 +342,7 @@
       ret.push((val >>> 8) & 0xFF);
       ret.push(val & 0xFF);
       return ret;
-    } else if (type === SIGNED | INT) {
+    } else if (type === (SIGNED | INT)) {
       return (val < 0 ? bytes(complement(-val, 32), INT) : bytes(val, INT));
     } else if (type === FLOAT) {
       val = +val;
@@ -359,6 +359,7 @@
       sig *= Math.pow(2, -log + 23);
       exp += log;
       sig = Math.round(sig);
+      sig &= 0x7FFFFF;
       ret.push(sign << 7);
       ret[0] += ((exp & 0xFE) >>> 1);
       ret.push((exp & 0x01) << 7);
@@ -394,7 +395,20 @@
     }
   }
   function shift (val, n) {
-    return val*Math.pow(2, n);
+    var i = 0;
+    if (n > 0) {
+      while (i < n) {
+        val *= 2;
+        i++;
+      }
+    } else {
+      n = -n;
+      while (i < n) {
+        val /= 2;
+        i++;
+      }
+    }
+    return val;
   }
   function complement(num, bits) {
     if (bits > 31 || !bits) return ~num;
