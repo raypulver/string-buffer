@@ -287,7 +287,7 @@
       return '<StringBuffer ' + (function () {
         var ret = '';
         for (var i = 0; i < StringBuffer.INSPECT_MAX_BYTES && i < this.length; ++i) {
-          ret += this.readUInt8(i).toString(16) + (i === StringBuffer.INSPECT_MAX_BYTES - 1 || i === this.length - 1 ? '' : ' ');
+          ret += padLeft(this.readUInt8(i).toString(16)) + (i === StringBuffer.INSPECT_MAX_BYTES - 1 || i === this.length - 1 ? '' : ' ');
         }
         return ret;
       }).call(this) + '>';
@@ -301,6 +301,16 @@
       return this.buffer.length;
     }
   });
+  function padLeft(str) {
+    var ret = '';
+    if (str.length < 2) {
+      for (var i = str.length; i < 2; ++i) {
+        ret += '0';
+      }
+    }
+    ret += str;
+    return ret;
+  }
   function bytesToFloat(bytes) {
     var sign = (0x80 & bytes[0]) >>> 7,
         exp = ((bytes[0] & 0x7F) << 1) + ((bytes[1] & 0x80) >>> 7),
