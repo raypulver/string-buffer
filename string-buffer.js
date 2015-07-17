@@ -255,19 +255,21 @@
         addendum += String.fromCharCode(val);
       }
       this.buffer = this.buffer.substr(0, offset) + addendum + this.buffer.substr(end);
+      return this;
     },
     slice: function (start, end) {
       if (!start) start = 0;
       if (!end) end = this.length;
       var ret = StringBuffer();
-      ret.buffer = this.buffer.substr(start, end);
+      ret.buffer = this.buffer.substr(start, end - start);
       return ret;
     },
     copy: function (target, start, sourceStart, sourceEnd) {
       if (!start) start = 0;
       if (!sourceStart) sourceStart = 0;
       if (!sourceEnd) sourceEnd = this.length;
-      target.buffer = target.buffer.substr(0, start) + this.buffer.substr(sourceStart, sourceEnd) + target.buffer.substr(start + sourceEnd - sourceStart);
+      target.buffer = target.buffer.substr(0, start) + this.buffer.substr(sourceStart, sourceEnd - sourceStart) + target.buffer.substr(start + sourceEnd - sourceStart);
+      return this;
     },
     equals: function (otherBuffer) {
       return this.buffer === otherBuffer.buffer;
