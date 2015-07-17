@@ -251,7 +251,7 @@
       if (!offset) offset = 0;
       if (!end) end = this.length;
       var addendum = '';
-      for (var i = offset; i < end; ++offset) {
+      for (var i = offset; i < end; ++i) {
         addendum += String.fromCharCode(val);
       }
       this.buffer = this.buffer.substr(0, offset) + addendum + this.buffer.substr(end);
