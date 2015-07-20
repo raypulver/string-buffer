@@ -30,4 +30,10 @@ describe('StringBuffer class', function () {
     buf.writeDoubleBE(-232.2222, 0);
     expect(buf.readDoubleBE(0)).to.equal(-232.2222);
   });
+  it('should understand negative indices', function () {
+    var buf = StringBuffer();
+    buf.writeUInt8(40, -1);
+    buf.writeUInt8(45, -1);
+    expect(buf.readUInt8(-1)).to.equal(45);
+  });
 });

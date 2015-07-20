@@ -183,23 +183,19 @@
       return offset + 8;
     },
     readUInt8: function (offset) {
-      offset >>>= 0;
       offset = normalize(offset, this.buffer, true);
       return this.buffer.charCodeAt(offset);
     },
     readInt8: function (offset) {
-      offset >>>= 0;
       var val = this.buffer.charCodeAt(offset);
       if (0x80 & val) return -complement(val, 8);
       return val;
     },
     readUInt16LE: function (offset) {
-      offset >>>= 0;
       offset = normalize(offset, this.buffer, true);
       return this.buffer.charCodeAt(offset) | (this.buffer.charCodeAt(offset + 1) << 8);
     },
     readUInt16BE: function (offset) {
-      offset >>>= 0;
       offset = normalize(offset, this.buffer, true);
       return (this.buffer.charCodeAt(offset) << 8) | this.buffer.charCodeAt(offset + 1);
     },
@@ -214,13 +210,11 @@
       return val;
     },
     readUInt32LE: function (offset) {
-      offset >>>= 0;
       offset = normalize(offset, this.buffer, true);
       if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return (this.buffer.charCodeAt(offset) | (this.buffer.charCodeAt(offset + 1) << 8) | (this.buffer.charCodeAt(offset + 2) << 16) | (this.buffer.charCodeAt(offset + 3) << 24));
     },
     readUInt32BE: function (offset) {
-      offset >>>= 0;
       offset = normalize(offset, this.buffer, true);
       return ((this.buffer.charCodeAt(offset) << 24) | (this.buffer.charCodeAt(offset + 1) << 16) | (this.buffer.charCodeAt(offset + 2) << 8) | this.buffer.charCodeAt(offset + 3));
     },
@@ -329,11 +323,25 @@
     },
     get: function (offset) {
       return this.buffer.charCodeAt(offset);
+    },
+    clear: function () {
+      this.buffer = '';
+      return this;
     }
   };
   Object.defineProperty(StringBuffer.prototype, "length", {
     get: function () {
       return this.buffer.length;
+    },
+    set: function (l) {
+      if (l > this.buffer.length) {
+        for (var i = l; i < this.buffer.length; ++i) {
+          this.buffer += '\0';
+        }
+      }
+      if (l < this.buffer.length) {
+        this.buffer = this.buffer.substr(0, l);
+      }
     }
   });
   function padLeft(str) {
@@ -469,7 +477,9 @@
   }
   function normalize (offset, buffer, isRead) {
     if (offset < 0 && buffer.length === 0) return 0;
-    if (offset === -1) offset = buffer.length - (isRead ? 1 : 0);
+    if (offset === -1) {
+      offset = buffer.length - (isRead ? 1 : 0);
+    }
     else if (offset < 0) offset = buffer.length + (isRead ? 0: 1) + (offset % (buffer.length + (isRead ? 0: 1)) );
     return offset;
   } 
