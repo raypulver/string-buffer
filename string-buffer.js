@@ -55,6 +55,7 @@
   StringBuffer.prototype = {
     writeUInt8: function (val, offset) {
       val = +val;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       if (offset === this.buffer.length || offset === -1) {
         this.buffer += String.fromCharCode(val);
       } else {
@@ -65,6 +66,7 @@
     writeInt8: function (val, offset) {
       val = +val;
       val = (val < 0 ? complement(-val, 8) : val);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       if (offset === this.buffer.length || offset === -1) {
         this.buffer += String.fromCharCode(val);
       } else {
@@ -78,6 +80,7 @@
       forEachRight(bytearr, function (v) {
         addendum += String.fromCharCode(v);
       });
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       if (offset >= this.buffer.length || offset === -1) {
         this.buffer += addendum;
       } else {
@@ -91,6 +94,7 @@
       bytearr.forEach(function (v) {
         addendum += String.fromCharCode(v);
       });
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       if (offset >= this.buffer.length || offset === -1) {
         this.buffer += addendum;
       } else {
@@ -101,11 +105,13 @@
     writeInt16LE: function (val, offset) {
       val = +val;
       val = (val < 0 ? complement(-val, 16) : val);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.writeUInt16LE(val, offset);
     },
     writeInt16BE: function (val, offset) {
       val = +val;
       val = (val < 0 ? complement(-val, 16) : val);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.writeUInt16BE(val, offset);
     },
     writeUInt32LE: function (val, offset) {
@@ -114,6 +120,7 @@
       forEachRight(bytearr, function (v) {
         addendum += String.fromCharCode(v);
       });
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       if (offset === this.buffer.length || offset === -1) {
         this.buffer += addendum;
       } else {
@@ -126,6 +133,7 @@
       bytearr.forEach(function (v) {
         addendum += String.fromCharCode(v);
       });
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       if (offset === this.buffer.length || offset === -1) {
         this.buffer += addendum;
       } else {
@@ -135,15 +143,18 @@
     writeInt32LE: function (val, offset) {
       val = +val;
       val = (val < 0 ? complement(-val, 32) : val);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.writeUInt32LE(val, offset);
     },
     writeInt32BE: function (val, offset) {
       val = +val;
       val = (val < 0 ? complement(-val, 32) : val);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.writeUInt32BE(val, offset);
     },
     writeFloatLE: function (val, offset) {
       var bytearr = bytes(val, FLOAT);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       for (var i = bytearr.length - 1; i >= 0; --i) {
         this.writeUInt8(bytearr[i], offset + (bytearr.length - 1 - i));
       }
@@ -151,6 +162,7 @@
     },
     writeFloatBE: function (val, offset) {
       var bytearr = bytes(val, FLOAT);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       bytearr.forEach(function (v, i) {
         this.writeUInt8(v, offset + i);
       }, this);
@@ -158,6 +170,7 @@
     },
     writeDoubleLE: function (val, offset) {
       var bytearr = bytes(val, DOUBLE);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       for (i = bytearr.length - 1; i >= 0; --i) {
         this.writeUInt8(bytearr[i], offset + (bytearr.length - 1 - i));
       }
@@ -165,6 +178,7 @@
     },
     writeDoubleBE: function (val, offset) {
       var bytearr = bytes(val, DOUBLE);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       bytearr.forEach(function (v, i) {
         this.writeUInt8(v, offset + i);
       }, this);
@@ -172,52 +186,63 @@
     },
     readUInt8: function (offset) {
       offset >>>= 0;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.buffer.charCodeAt(offset);
     },
     readInt8: function (offset) {
       offset >>>= 0;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       var val = this.buffer.charCodeAt(offset);
       if (0x80 & val) return -complement(val, 8);
       return val;
     },
     readUInt16LE: function (offset) {
       offset >>>= 0;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.buffer.charCodeAt(offset) | (this.buffer.charCodeAt(offset + 1) << 8);
     },
     readUInt16BE: function (offset) {
       offset >>>= 0;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return (this.buffer.charCodeAt(offset) << 8) | this.buffer.charCodeAt(offset + 1);
     },
     readInt16LE: function (offset) {
       var val = this.readUInt16LE(offset);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       if (val & 0x8000) return -complement(val, 16);
       return val;
     },
     readInt16BE: function (offset) {
       var val = this.readUInt16BE(offset);
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       if (val & 0x8000) return -complement(val, 16);
       return val;
     },
     readUInt32LE: function (offset) {
       offset >>>= 0;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return (this.buffer.charCodeAt(offset) | (this.buffer.charCodeAt(offset + 1) << 8) | (this.buffer.charCodeAt(offset + 2) << 16) | (this.buffer.charCodeAt(offset + 3) << 24));
     },
     readUInt32BE: function (offset) {
       offset >>>= 0;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return ((this.buffer.charCodeAt(offset) << 24) | (this.buffer.charCodeAt(offset + 1) << 16) | (this.buffer.charCodeAt(offset + 2) << 8) | this.buffer.charCodeAt(offset + 3));
     },
     readInt32LE: function (offset) {
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       var val = this.readUInt32LE(offset);
       if (val & 0x80000000) return -complement(val, 32);
       return val;
     },
     readInt32BE: function (offset) {
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       var val = this.readUInt32BE(offset);
       if (val & 0x80000000) return -complement(val, 32);
       return val;
     },
     readFloatLE: function (offset) {
       var bytes = [], ret;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       for (var i = 0; i < 4; ++i) {
         bytes.push(this.readUInt8(offset + i));
       }
@@ -226,6 +251,7 @@
     },
     readFloatBE: function (offset) {
       var bytes = [], ret;
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       for (var i = 0; i < 4; ++i) {
         bytes.push(this.readUInt8(offset + i));
       }
@@ -233,6 +259,7 @@
     },
     readDoubleLE: function (offset) {
       var bytes = [];
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       for (var i = 0; i < 8; ++i) {
         bytes.push(this.readUInt8(offset + i));
       }
@@ -241,12 +268,15 @@
     },
     readDoubleBE: function (offset) {
       var bytes = [];
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       for (var i = 0; i < 8; ++i) {
         bytes.push(this.readUInt8(offset + i));
       }
       return bytesToDouble(bytes);
     },
     fill: function (val, offset, end) {
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
+      if (end < 0) end = this.buffer.length - ((end + 1) % this.buffer.length);
       if (typeof val === 'string') val = val.charCodeAt(0);
       if (!offset) offset = 0;
       if (!end) end = this.length;
@@ -260,6 +290,8 @@
     slice: function (start, end) {
       if (!start) start = 0;
       if (!end) end = this.length;
+      if (start < 0) start = this.buffer.length - ((start + 1) % this.buffer.length);
+      if (end < 0) end = this.buffer.length - ((end + 1) % this.buffer.length);
       var ret = StringBuffer();
       ret.buffer = this.buffer.substr(start, end - start);
       return ret;
@@ -268,6 +300,9 @@
       if (!start) start = 0;
       if (!sourceStart) sourceStart = 0;
       if (!sourceEnd) sourceEnd = this.length;
+      if (start < 0) start = this.buffer.length - ((start + 1) % this.buffer.length);
+      if (sourceStart < 0) sourceStart = this.buffer.length - ((sourceStart + 1) % this.buffer.length);
+      if (sourceEnd < 0) sourceEnd = this.buffer.length - ((sourceEnd + 1) % this.buffer.length);
       target.buffer = target.buffer.substr(0, start) + this.buffer.substr(sourceStart, sourceEnd - sourceStart) + target.buffer.substr(start + sourceEnd - sourceStart);
       return this;
     },
@@ -281,6 +316,7 @@
       return this.buffer;
     },
     write: function (string, offset) {
+      if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       for (var i = 0; i < string.length; ++i) {
         this.writeUInt8(string.charCodeAt(i), offset + i);
       }
