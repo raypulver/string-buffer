@@ -327,6 +327,39 @@
     clear: function () {
       this.buffer = '';
       return this;
+    },
+    toTypedArray: function (bits, bigEndian) {
+      if (typeof bits === 'undefined' || bits < 8 || bits > 32 || bits % 8) throw Error('Must specify bit size of typed array to be 8, 16, or 32.');
+      if (bits === 8) {
+        var ret = new Uint8Array(this.length);
+        for (var i = 0; i < this.length; ++i) {
+          ret[i] = this.readUInt8(i);
+        }
+        return ret;
+      } else if (bits === 16) {
+        var ret = new Uint16Array(Math.ceil(this.length / 2));
+        for (var i = 0; i < this.length; i += 2) {
+          if (!bigEndian) ret[i] = this.readUInt16LE(i);
+          else ret[i] = this.readUInt16BE(i);
+        }
+        return ret;
+      } else {
+        var ret = new Uint32Array(Math.ceil(this.length / 4));
+        for (var i = 0; i < this.length; i += 4) {
+          if (!bigEndian) ret[i] = this.readUInt32LE(i);
+          else ret[i] = this.readUInt32BE(i);
+        }
+        return ret;
+      }
+    },
+    toBlob: function (mimeType, bigEndian) {
+      if (!mimeType) mimeType = 'application/octet-binary';
+      try {
+        return new Blob([this.toTypedArray(8, bigEndian)], { type: mimeType 
+});
+      } catch (e) {
+        throw Error('StringBuffer#toBlob only works in the browser.');
+      }
     }
   };
   Object.defineProperty(StringBuffer.prototype, "length", {
