@@ -18,10 +18,10 @@ describe('StringBuffer class', function () {
   });
   it('should read/write floats in different byte orderings', function () {
     var buf = StringBuffer();
-    buf.writeFloatLE(2.2, 0);
-    expect(buf.readFloatLE(0)).to.be.within(2.2 - EPS, 2.2 + EPS);
-    buf.writeFloatBE(2.2, 0);
-    expect(buf.readFloatBE(0)).to.be.within(2.2 - EPS, 2.2 + EPS);
+    buf.writeFloatLE(0.125, 0);
+    expect(buf.readFloatLE(0)).to.equal(0.125);
+    buf.writeFloatBE(0.125, 0);
+    expect(buf.readFloatBE(0)).to.equal(0.125);
   });
   it('should read/write doubles in different byte orderings', function () {
     var buf = StringBuffer();

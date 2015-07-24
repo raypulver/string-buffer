@@ -4,9 +4,67 @@
       CHAR = 0x00,
       SHORT = 0x02,
       INT = 0x04,
-      FLOAT = 0x06,
-      DOUBLE = 0x07,
-      STRING = 0x08;
+      FLOAT = 0x08,
+      DOUBLE = 0x18,
+      STRING = 0x20;
+  var SIGNED_CHAR = 0x01,
+      SIGNED_SHORT = 0x03,
+      SIGNED_INT = 0x05;
+  function typeCheck(val, type) {
+    switch (type) { 
+      case SIGNED_CHAR:
+        if (val % 1 || val < -(1 << 7) || val >= (1 << 7)) typeError(type);
+        break;
+      case CHAR:
+        if (val % 1 || val < 0 || val >= (1 << 8)) typeError(type);
+        break;
+      case SIGNED_SHORT:
+        if (val % 1 || val < -(1 << 15) || val >= (1 << 15)) typeError(type);
+        break;
+      case SHORT:
+        if (val % 1 || val < 0 || val >= (1 << 16)) typeError(type);
+        break;
+      case SIGNED_INT:
+        if (val % 1 || val < -(Math.pow(2, 31)) || val >= Math.pow(2, 31)) typeError(type);
+        break;
+      case INT:
+        if (val % 1 || val < 0 || val >= Math.pow(2, 32)) typeError(type);
+        break;
+      case FLOAT:
+        var exp, sig = val, log;
+        sig = Math.abs(sig);
+        log = Math.log(sig)/Math.log(2);
+        if (log < 0) {
+          log = Math.ceil(log);
+        } else {
+          log = Math.floor(log);
+        }
+        exp = 105 + log;
+        if (exp < 0 || exp > 255) typeError(type);
+        sig *= Math.pow(2, -log + 23);
+        if (sig % 1) typeError(type);
+        break;
+      case DOUBLE:
+        break;
+      case STRING:
+        if (typeof val !== 'string') typeError(type);
+        break;
+    }
+  }
+  function typeError(type) {
+    throw Error('Type assertion failure, check that your value is actually of type ' + typeToStr(type) + '.');
+  }
+  function typeToStr(type) {
+    if (type === (SIGNED | CHAR)) return "char";
+    else if (type === CHAR) return "unsigned char";
+    else if (type === (SIGNED | SHORT)) return "short";
+    else if (type === SHORT) return "unsigned short";
+    else if (type === (SIGNED | INT)) return "int";
+    else if (type === INT) return "unsigned int";
+    else if (type === FLOAT) return "float";
+    else if (type === DOUBLE) return "double";
+    else if (type === STRING) return "string";
+  }
   function StringBuffer(str) {
     if (!(this instanceof StringBuffer)) return new StringBuffer(str);
     this.buffer = '';
@@ -74,6 +132,7 @@
   StringBuffer.prototype = {
     writeUInt8: function (val, offset) {
       val = +val;
+      typeCheck(val, CHAR);
       offset = normalize(offset, this.buffer)
       if (offset === this.buffer.length) {
         this.buffer += String.fromCharCode(val);
@@ -84,6 +143,7 @@
     },
     writeInt8: function (val, offset) {
       val = +val;
+      typeCheck(val, SIGNED | CHAR);
       val = (val < 0 ? complement(-val, 8) : val);
       offset = normalize(offset, this.buffer)
       if (offset === this.buffer.length) {
@@ -95,6 +155,7 @@
     },
     writeUInt16LE: function (val, offset) {
       val = +val;
+      typeCheck(val, SHORT);
       var bytearr = bytes(val, SHORT), addendum = '';
       forEachRight(bytearr, function (v) {
         addendum += String.fromCharCode(v);
@@ -109,6 +170,7 @@
     },
     writeUInt16BE: function (val, offset) {
       val = +val;
+      typeCheck(val, SHORT);
       var bytearr = bytes(val, SHORT), addendum = '';
       bytearr.forEach(function (v) {
         addendum += String.fromCharCode(v);
@@ -123,12 +185,14 @@
     },
     writeInt16LE: function (val, offset) {
       val = +val;
+      typeCheck(val, SIGNED | SHORT);
       val = (val < 0 ? complement(-val, 16) : val);
       if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.writeUInt16LE(val, offset);
     },
     writeInt16BE: function (val, offset) {
       val = +val;
+      typeCheck(val, SIGNED | SHORT);
       val = (val < 0 ? complement(-val, 16) : val);
       if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.writeUInt16BE(val, offset);
@@ -136,6 +200,7 @@
     writeUInt32LE: function (val, offset) {
       val = +val;
       var bytearr = bytes(val, INT), addendum = '';
+      typeCheck(val, INT);
       forEachRight(bytearr, function (v) {
         addendum += String.fromCharCode(v);
       });
@@ -148,6 +213,7 @@
     },
     writeUInt32BE: function (val, offset) {
       val = +val;
+      typeCheck(val, INT);
       var bytearr = bytes(val, INT), addendum = '';
       bytearr.forEach(function (v) {
         addendum += String.fromCharCode(v);
@@ -161,15 +227,18 @@
     },
     writeInt32LE: function (val, offset) {
       val = +val;
+      typeCheck(val, SIGNED | INT);
       val = (val < 0 ? complement(-val, 32) : val);
       return this.writeUInt32LE(val, offset);
     },
     writeInt32BE: function (val, offset) {
       val = +val;
+      typeCheck(val, SIGNED | INT);
       val = (val < 0 ? complement(-val, 32) : val);
       return this.writeUInt32BE(val, offset);
     },
     writeFloatLE: function (val, offset) {
+      typeCheck(val, FLOAT);
       var bytearr = bytes(val, FLOAT);
       offset = normalize(offset, this.buffer);
       for (var i = bytearr.length - 1; i >= 0; --i) {
@@ -178,6 +247,7 @@
       return offset + 4;
     },
     writeFloatBE: function (val, offset) {
+      typeCheck(val, FLOAT);
       var bytearr = bytes(val, FLOAT);
       offset = normalize(offset, this.buffer);
       bytearr.forEach(function (v, i) {
@@ -186,6 +256,7 @@
       return offset + 4;
     },
     writeDoubleLE: function (val, offset) {
+      typeCheck(val, DOUBLE);
       var bytearr = bytes(val, DOUBLE);
       offset = normalize(offset, this.buffer);
       for (i = bytearr.length - 1; i >= 0; --i) {
@@ -194,6 +265,7 @@
       return offset + 8;
     },
     writeDoubleBE: function (val, offset) {
+      typeCheck(val, DOUBLE);
       var bytearr = bytes(val, DOUBLE);
       offset = normalize(offset, this.buffer);
       bytearr.forEach(function (v, i) {
@@ -203,7 +275,6 @@
     },
     readUInt8: function (offset) {
       offset = normalize(offset, this.buffer, true);
-      console.log(offset);
       return this.buffer.charCodeAt(offset);
     },
     readInt8: function (offset) {
