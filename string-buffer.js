@@ -27,6 +27,25 @@
   StringBuffer.isStringBuffer = function (val) {
     return val instanceof StringBuffer;
   };
+  StringBuffer.fromBlob = function (blob, cb) {
+    try {
+      var ret = StringBuffer();
+      var reader = new FileReader();
+      reader.addEventListener('loadend', function () {
+        var arr = new Uint8Array(reader.result);
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeUInt8(arr[i], -1);
+        }
+        cb(null, ret);
+      });
+      reader.readAsArrayBuffer(blob);
+    } catch (e) {
+      cb(e);
+    }
+  };
+  StringBuffer.fromFile = function (file, cb) {
+    return StringBuffer.fromBlob(file.slice(), cb);
+  };
   StringBuffer.byteLength = function (str, enc) {
     if (!enc) enc = 'ascii';
     var ret;
@@ -184,6 +203,7 @@
     },
     readUInt8: function (offset) {
       offset = normalize(offset, this.buffer, true);
+      console.log(offset);
       return this.buffer.charCodeAt(offset);
     },
     readInt8: function (offset) {
@@ -513,7 +533,7 @@
     if (offset === -1) {
       offset = buffer.length - (isRead ? 1 : 0);
     }
-    else if (offset < 0) offset = buffer.length + (isRead ? 0: 1) + (offset % (buffer.length + (isRead ? 0: 1)) );
+    else if (offset < 0) offset = buffer.length + (isRead ? 0: 1) + (offset % (buffer.length + +!isRead) === 0 ? -(buffer.length + !isRead) : (offset % (buffer.length + (isRead ? 0: 1)) ));
     return offset;
   } 
   if (typeof exports !== 'undefined') {
