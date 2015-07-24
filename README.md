@@ -28,3 +28,11 @@ buffer.readUInt8(-2);
 buffer.readUInt8(-1);
 // 4
 ```
+
+If you are using a StringBuffer in the browser, you can convert it to a typed array with `StringBuffer#toTypedArray(bitsPerElement, bigEndian)`. You should pass `true` as the second argument if your data is in big endian format, otherwise the second argument can be omitted. For example if you want a `Uint8Array` and your data is little endian, you can do something like
+```
+var arr = buffer.toTypedArray(8);
+```
+You can also convert your buffer directly to a `Blob` object by calling `StringBuffer#toBlob(mimeType, bigEndian)`.
+
+Also, you can create a StringBuffer directly from a `Blob` or `File` object using `StringBuffer.fromBlob(blob, cb)` or `StringBuffer.fromFile(file, cb)`. Both these functions are asynchronous and receive an error object as the first argument to the callback, and the StringBuffer as the second argument.
