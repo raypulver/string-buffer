@@ -130,9 +130,9 @@
   };
   StringBuffer.INSPECT_MAX_BYTES = 50;
   StringBuffer.prototype = {
-    writeUInt8: function (val, offset) {
+    writeUInt8: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, CHAR);
+      if (!noAssert) typeCheck(val, CHAR);
       offset = normalize(offset, this.buffer)
       if (offset === this.buffer.length) {
         this.buffer += String.fromCharCode(val);
@@ -141,9 +141,9 @@
       }
       return offset + 1; 
     },
-    writeInt8: function (val, offset) {
+    writeInt8: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, SIGNED | CHAR);
+      if (!noAssert) typeCheck(val, SIGNED | CHAR);
       val = (val < 0 ? complement(-val, 8) : val);
       offset = normalize(offset, this.buffer)
       if (offset === this.buffer.length) {
@@ -153,9 +153,9 @@
       }
       return offset + 1;
     },
-    writeUInt16LE: function (val, offset) {
+    writeUInt16LE: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, SHORT);
+      if (!noAssert) typeCheck(val, SHORT);
       var bytearr = bytes(val, SHORT), addendum = '';
       forEachRight(bytearr, function (v) {
         addendum += String.fromCharCode(v);
@@ -168,9 +168,9 @@
       }
       return offset + 2;
     },
-    writeUInt16BE: function (val, offset) {
+    writeUInt16BE: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, SHORT);
+      if (!noAssert) typeCheck(val, SHORT);
       var bytearr = bytes(val, SHORT), addendum = '';
       bytearr.forEach(function (v) {
         addendum += String.fromCharCode(v);
@@ -183,24 +183,24 @@
       }
       return offset + 2;
     },
-    writeInt16LE: function (val, offset) {
+    writeInt16LE: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, SIGNED | SHORT);
+      if (!noAssert) typeCheck(val, SIGNED | SHORT);
       val = (val < 0 ? complement(-val, 16) : val);
       if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.writeUInt16LE(val, offset);
     },
-    writeInt16BE: function (val, offset) {
+    writeInt16BE: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, SIGNED | SHORT);
+      if (!noAssert) typeCheck(val, SIGNED | SHORT);
       val = (val < 0 ? complement(-val, 16) : val);
       if (offset < 0) offset = this.buffer.length - ((offset + 1) % this.buffer.length);
       return this.writeUInt16BE(val, offset);
     },
-    writeUInt32LE: function (val, offset) {
+    writeUInt32LE: function (val, offset, noAssert) {
       val = +val;
       var bytearr = bytes(val, INT), addendum = '';
-      typeCheck(val, INT);
+      if (!noAssert) typeCheck(val, INT);
       forEachRight(bytearr, function (v) {
         addendum += String.fromCharCode(v);
       });
@@ -211,9 +211,9 @@
         this.buffer = this.buffer.substr(0, offset) + addendum + this.buffer.substr(offset + 4);
       }
     },
-    writeUInt32BE: function (val, offset) {
+    writeUInt32BE: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, INT);
+      if (!noAssert) typeCheck(val, INT);
       var bytearr = bytes(val, INT), addendum = '';
       bytearr.forEach(function (v) {
         addendum += String.fromCharCode(v);
@@ -225,20 +225,20 @@
         this.buffer = this.buffer.substr(0, offset) + addendum + this.buffer.substr(offset + 4);
       }
     },
-    writeInt32LE: function (val, offset) {
+    writeInt32LE: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, SIGNED | INT);
+      if (!noAssert) typeCheck(val, SIGNED | INT);
       val = (val < 0 ? complement(-val, 32) : val);
       return this.writeUInt32LE(val, offset);
     },
-    writeInt32BE: function (val, offset) {
+    writeInt32BE: function (val, offset, noAssert) {
       val = +val;
-      typeCheck(val, SIGNED | INT);
+      if (!noAssert) typeCheck(val, SIGNED | INT);
       val = (val < 0 ? complement(-val, 32) : val);
       return this.writeUInt32BE(val, offset);
     },
-    writeFloatLE: function (val, offset) {
-      typeCheck(val, FLOAT);
+    writeFloatLE: function (val, offset, noAssert) {
+      if (!noAssert) typeCheck(val, FLOAT);
       var bytearr = bytes(val, FLOAT);
       offset = normalize(offset, this.buffer);
       for (var i = bytearr.length - 1; i >= 0; --i) {
@@ -246,8 +246,8 @@
       }
       return offset + 4;
     },
-    writeFloatBE: function (val, offset) {
-      typeCheck(val, FLOAT);
+    writeFloatBE: function (val, offset, noAssert) {
+      if (!noAssert) typeCheck(val, FLOAT);
       var bytearr = bytes(val, FLOAT);
       offset = normalize(offset, this.buffer);
       bytearr.forEach(function (v, i) {
@@ -255,8 +255,8 @@
       }, this);
       return offset + 4;
     },
-    writeDoubleLE: function (val, offset) {
-      typeCheck(val, DOUBLE);
+    writeDoubleLE: function (val, offset, noAssert) {
+      if (!noAssert) typeCheck(val, DOUBLE);
       var bytearr = bytes(val, DOUBLE);
       offset = normalize(offset, this.buffer);
       for (i = bytearr.length - 1; i >= 0; --i) {
@@ -264,8 +264,8 @@
       }
       return offset + 8;
     },
-    writeDoubleBE: function (val, offset) {
-      typeCheck(val, DOUBLE);
+    writeDoubleBE: function (val, offset, noAssert) {
+      if (!noAssert) typeCheck(val, DOUBLE);
       var bytearr = bytes(val, DOUBLE);
       offset = normalize(offset, this.buffer);
       bytearr.forEach(function (v, i) {

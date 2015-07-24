@@ -28,6 +28,7 @@ buffer.readUInt8(-2);
 buffer.readUInt8(-1);
 // 4
 ```
+StringBuffer will throw if you attempt to write a number that cannot be stored in that type, such as trying to store a floating point value that requires double precision in a float. To suppress this behavior, you can pass `true` as the third argument to `StringBuffer#writeFloatLE` or what have you. This is consistent with the Node.js API.
 
 If you are using a StringBuffer in the browser, you can convert it to a typed array with `StringBuffer#toTypedArray(bitsPerElement, bigEndian)`. You should pass `true` as the second argument if your data is in big endian format, otherwise the second argument can be omitted. For example if you want a `Uint8Array` and your data is little endian, you can do something like
 ```
