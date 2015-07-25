@@ -104,6 +104,18 @@
   StringBuffer.fromFile = function (file, cb) {
     return StringBuffer.fromBlob(file.slice(), cb);
   };
+  StringBuffer.fromBuffer = function (buf) {
+    var ret = StringBuffer();
+    try {
+      if (!Buffer.isBuffer(buf)) throw TypeError('Must pass a buffer.');
+      for (var i = 0; i < buf.length; ++i) {
+        ret.writeUInt8(buf[i], -1);
+      }
+      return ret;
+    } catch (e) {
+      throw ReferenceError('Can only use fromBuffer in a Node.js environment.');
+    }
+  };
   StringBuffer.byteLength = function (str, enc) {
     if (!enc) enc = 'ascii';
     var ret;
@@ -451,6 +463,18 @@
       } catch (e) {
         throw Error('StringBuffer#toBlob only works in the browser.');
       }
+    },
+    toBuffer: function () {
+      var ret, i;
+      try {
+        ret = new Buffer(this.length);
+      } catch (e) {
+        throw ReferenceError('Can only use toBuffer in a Node.js environment.');
+      }
+      for (i = 0; i < this.length; ++i) {
+        ret.writeUInt8(this.readUInt8(i), i);
+      }
+      return ret;
     }
   };
   Object.defineProperty(StringBuffer.prototype, "length", {
@@ -572,20 +596,7 @@
     }
   }
   function shift (val, n) {
-    var i = 0;
-    if (n > 0) {
-      while (i < n) {
-        val *= 2;
-        i++;
-      }
-    } else {
-      n = -n;
-      while (i < n) {
-        val /= 2;
-        i++;
-      }
-    }
-    return val;
+    return val*Math.pow(2, n);
   }
   function complement(num, bits) {
     if (bits > 31 || !bits) return ~num;
