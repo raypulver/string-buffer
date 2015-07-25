@@ -30,12 +30,17 @@ buffer.readUInt8(-1);
 ```
 StringBuffer will throw if you attempt to write a number that cannot be stored in that type, such as trying to store a floating point value that requires double precision in a float. To suppress this behavior, you can pass `true` as the third argument to `StringBuffer#writeFloatLE` or what have you. This is consistent with the Node.js API.
 
-If you are using a StringBuffer in the browser, you can convert it to a typed array with `StringBuffer#toTypedArray(bitsPerElement, bigEndian)`. You should pass `true` as the second argument if your data is in big endian format, otherwise the second argument can be omitted. For example if you want a `Uint8Array` and your data is little endian, you can do something like
+You can convert a StringBuffer to a typed array with `StringBuffer#toTypedArray(type, bigEndian)`. You should pass `true` as the second argument if your data is in big endian format, otherwise the second argument can be omitted. If you don't supply a first argument it will default to `Uint8Array`, otherwise you can supply any one of the typed array constructors as the first argument to return a typed array of that variant. For example if you want a `Int32Array` and your data is little endian, you can do something like
 ```
-var arr = buffer.toTypedArray(8);
+var arr = buffer.toTypedArray(Int32Array);
 ```
+
+You can convert back from a typed array using `StringBuffer.fromTypedArray(array, bigEndian)`. If you want your data in big endian format, pass `true` as the second argument, otherwise the second argument can be omitted.
+
 You can also convert your buffer directly to a `Blob` object by calling `StringBuffer#toBlob(mimeType, bigEndian)`.
 
 Also, you can create a StringBuffer directly from a `Blob` or `File` object using `StringBuffer.fromBlob(blob, cb)` or `StringBuffer.fromFile(file, cb)`. Both these functions are asynchronous and receive an error object as the first argument to the callback, and the StringBuffer as the second argument.
 
 If you are working in a Node.js environment and you need to convert a StringBuffer instance to a Buffer instance, you can use `StringBuffer#toBuffer()` to do so. If you want to get a StringBuffer from a buffer you can pass the buffer to `StringBuffer.fromBuffer(buf)`.
+
+You can a

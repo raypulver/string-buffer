@@ -46,4 +46,12 @@ describe('StringBuffer class', function () {
     expect(buf.writeUInt8.bind(buf, 40, -4)).to.throw(RangeError);
     expect(buf.writeUInt8.bind(buf, 40, 3)).to.throw(RangeError);
   });
+  it('should convert to a typed array and back', function () {
+    var buf = StringBuffer();
+    buf.writeDoubleLE(232.22, -1);
+    buf.writeDoubleLE(190.5, -1);
+    var bounce = StringBuffer.fromTypedArray(buf.toTypedArray(Float64Array));
+    expect(buf.readDoubleLE(0)).to.equal(232.22);
+    expect(buf.readDoubleLE(8)).to.equal(190.5);
+  });
 });

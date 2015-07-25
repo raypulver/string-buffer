@@ -116,6 +116,73 @@
       throw ReferenceError('Can only use fromBuffer in a Node.js environment.');
     }
   };
+  StringBuffer.fromTypedArray = function (arr, bigEndian) {
+    var ret = StringBuffer();
+    if (arr instanceof Uint8Array || arr instanceof Uint8ClampedArray) for (var i = 0; i < arr.length; ++i) ret.writeUInt8(arr[i], -1);
+    else if (arr instanceof Int8Array) for (var i = 0; i < arr.length; ++i) ret.writeInt8(arr[i], -1);
+    else if (arr instanceof Uint16Array) {
+      if (bigEndian) {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeUInt16BE(arr[i], -1);
+        }
+      } else {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeUInt16LE(arr[i], -1);
+        }
+      }
+    } else if (arr instanceof Int16Array) {
+      if (bigEndian) {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeInt16BE(arr[i], -1);
+        }
+      } else {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeInt16LE(arr[i], -1);
+        }
+      }
+    } else if (arr instanceof Uint32Array) {
+      if (bigEndian) {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeUInt32BE(arr[i], -1);
+        }
+      } else {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeUInt32LE(arr[i], -1);
+        }
+      }
+    } else if (arr instanceof Int32Array) {
+      if (bigEndian) {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeInt32BE(arr[i], -1);
+        }
+      } else {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeInt32LE(arr[i], -1);
+        }
+      }
+    } else if (arr instanceof Float32Array) {
+      if (bigEndian) {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeFloatBE(arr[i], -1);
+        }
+      } else {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeFloatLE(arr[i], -1);
+        }
+      }
+    } else if (arr instanceof Float64Array) {
+      if (bigEndian) {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeDoubleBE(arr[i], -1);
+        }
+      } else {
+        for (var i = 0; i < arr.length; ++i) {
+          ret.writeDoubleLE(arr[i], -1);
+        }
+      }
+    } else throw TypeError('Must supply a typed array.');
+    return ret;
+  };
   StringBuffer.byteLength = function (str, enc) {
     if (!enc) enc = 'ascii';
     var ret;
@@ -431,28 +498,120 @@
       this.buffer = '';
       return this;
     },
-    toTypedArray: function (bits, bigEndian) {
-      if (typeof bits === 'undefined' || bits < 8 || bits > 32 || bits % 8) throw Error('Must specify bit size of typed array to be 8, 16, or 32.');
-      if (bits === 8) {
-        var ret = new Uint8Array(this.length);
-        for (var i = 0; i < this.length; ++i) {
-          ret[i] = this.readUInt8(i);
-        }
-        return ret;
-      } else if (bits === 16) {
-        var ret = new Uint16Array(Math.ceil(this.length / 2));
-        for (var i = 0; i < this.length; i += 2) {
-          if (!bigEndian) ret[i] = this.readUInt16LE(i);
-          else ret[i] = this.readUInt16BE(i);
-        }
-        return ret;
-      } else {
-        var ret = new Uint32Array(Math.ceil(this.length / 4));
-        for (var i = 0; i < this.length; i += 4) {
-          if (!bigEndian) ret[i] = this.readUInt32LE(i);
-          else ret[i] = this.readUInt32BE(i);
-        }
-        return ret;
+    toTypedArray: function () {
+      var type, bigEndian;
+      if (typeof arguments[1] === 'boolean') bigEndian = arguments[1];
+      else if (typeof arguments[0] === 'boolean') bigEndian = arguments[0];
+      else bigEndian = false;
+      switch (typeof arguments[0]) {
+        case 'function':
+          type = arguments[0];
+          break;
+        case 'undefined':
+          type = Uint8Array;
+          break;
+        default:
+          throw TypeError('Must supply a typed array to convert to.');
+      }
+      switch (type) {
+        case Uint8Array:
+          var ret = new Uint8Array(this.length);
+          for (var i = 0; i < this.length; ++i) {
+            ret[i] = this.readUInt8(i);
+          }
+          return ret;
+        case Uint8ClampedArray:
+          var ret = new Uint8ClampedArray(this.length);
+          for (var i = 0; i < this.length; ++i) {
+            ret[i] = this.readUInt8(i);
+          }
+          return ret;
+        case Int8Array:
+          var ret = new Int8Array(this.length);
+          for (var i = 0; i < this.length; ++i) {
+            ret[i] = this.readInt8(i);
+          }
+          return ret;
+        case Uint16Array:
+          var ret = new Uint16Array(Math.ceil(this.length / 2));
+          if (!bigEndian) {
+            for (var i = 0; i < this.length; i += 2) {
+              ret[i/2] = this.readUInt16LE(i);
+            }
+            return ret;
+          } else {
+            for (var i = 0; i < this.length; i += 2) {
+              ret[i/2] = this.readUInt16BE(i);
+            }
+            return ret;
+          }
+        case Int16Array:
+          var ret = new Int16Array(Math.ceil(this.length / 2));
+          if (!bigEndian) {
+            for (var i = 0; i < this.length; i += 2) {
+              ret[i/2] = this.readInt16LE(i);
+            }
+            return ret;
+          } else {
+            for (var i = 0; i < this.length; i += 2) {
+              ret[i/2] = this.readInt16BE(i);
+            }
+            return ret;
+          }
+        case Uint32Array:
+          var ret = new Uint32Array(Math.ceil(this.length / 4));
+          if (!bigEndian) {
+            for (var i = 0; i < this.length; i += 4) {
+              ret[i/4] = this.readUInt32LE(i);
+            }
+            return ret;
+          } else {
+            for (var i = 0; i < this.length; i += 4) {
+              ret[i/4] = this.readUInt32BE(i);
+            }
+            return ret;
+          }
+        case Int32Array:
+          var ret = new Int32Array(Math.ceil(this.length / 4));
+          if (!bigEndian) {
+            for (var i = 0; i < this.length; i += 4) {
+              ret[i/4] = this.readInt32LE(i);
+            }
+            return ret;
+          } else {
+            for (var i = 0; i < this.length; i += 4) {
+              ret[i/4] = this.readInt32BE(i);
+            }
+            return ret;
+          }
+        case Float32Array:
+          var ret = new Float32Array(Math.ceil(this.length / 4));
+          if (!bigEndian) {
+            for (var i = 0; i < this.length; i += 4) {
+              ret[i/4] = this.readFloatLE(i);
+            }
+            return ret;
+          } else {
+            for (var i = 0; i < this.length; i += 4) {
+              ret[i/4] = this.readFloatBE(i);
+            }
+            return ret;
+          }
+        case Float64Array:
+          var ret = new Float64Array(Math.ceil(this.length / 8));
+          if (!bigEndian) {
+            for (var i = 0; i < this.length; i += 8) {
+              ret[i/8] = this.readFloatLE(i);
+            }
+            return ret;
+          } else {
+            for (var i = 0; i < this.length; i += 8) {
+              ret[i/8] = this.readFloatBE(i);
+            }
+            return ret;
+          }
+        default:
+          throw TypeError('Must provide a typed array to convert to.');
       }
     },
     toBlob: function (mimeType, bigEndian) {
