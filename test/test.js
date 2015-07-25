@@ -35,5 +35,15 @@ describe('StringBuffer class', function () {
     buf.writeUInt8(40, -1);
     buf.writeUInt8(45, -1);
     expect(buf.readUInt8(-1)).to.equal(45);
+    expect(buf.readUInt8(-2)).to.equal(40);
+  });
+  it('should throw on an out of range index', function () {
+    var buf = StringBuffer();
+    buf.writeUInt8(40, -1);
+    buf.writeUInt8(45, -1);
+    expect(buf.readUInt8.bind(buf, -3)).to.throw(RangeError);
+    expect(buf.readUInt8.bind(buf, 2)).to.throw(RangeError);
+    expect(buf.writeUInt8.bind(buf, 40, -4)).to.throw(RangeError);
+    expect(buf.writeUInt8.bind(buf, 40, 3)).to.throw(RangeError);
   });
 });

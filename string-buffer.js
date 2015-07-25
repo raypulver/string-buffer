@@ -39,9 +39,9 @@
         } else {
           log = Math.floor(log);
         }
-        exp = 105 + log;
+        exp = 103 + log;
         if (exp < 0 || exp > 255) typeError(type);
-        sig *= Math.pow(2, -log + 23);
+        sig *= Math.pow(2, -log + 24);
         if (sig % 1) typeError(type);
         break;
       case DOUBLE:
@@ -600,12 +600,13 @@
     }
   }
   function normalize (offset, buffer, isRead) {
+    var realOffset;
+    if (!isRead) isRead = false;
     if (offset < 0 && buffer.length === 0) return 0;
-    if (offset === -1) {
-      offset = buffer.length - (isRead ? 1 : 0);
-    }
-    else if (offset < 0) offset = buffer.length + (isRead ? 0: 1) + (offset % (buffer.length + +!isRead) === 0 ? -(buffer.length + !isRead) : (offset % (buffer.length + (isRead ? 0: 1)) ));
-    return offset;
+    if (offset < 0) realOffset = buffer.length + +!isRead + offset;
+    else realOffset = offset;
+    if (realOffset < 0 || realOffset > buffer.length - +isRead) throw RangeError('Tried to ' + (isRead ? 'read' : 'write') + ' at index ' + String(offset) + ' but it is out of range.');
+    return realOffset;
   } 
   if (typeof exports !== 'undefined') {
     if (typeof module !== 'undefined' && module.exports) {

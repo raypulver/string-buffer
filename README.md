@@ -18,7 +18,7 @@ buffer = StringBuffer.concat([ buffer, secondBuffer ]);
 buffer
 // <StringBuffer fe 40 6d 07 1a 9f be 76 c9>
 ```
-You can also pass negative indices to the methods to indicate you want to read or write that many characters from the end of the line. Passing -1 as an index anywhere where you are reading data (as opposed to writing it) means "the last byte in the buffer." Passing -1 as an index where you are *writing* data signifies "the end of the StringBuffer, no overwriting." The reason this was done is so you can do stuff like this:
+You can also pass negative indices to the methods to indicate you want to read or write that many characters from the end of the line. Passing -1 as an index anywhere where you are reading data (as opposed to writing it) means "the last byte in the buffer." Passing -1 as an index where you are *writing* data signifies "the end of the StringBuffer, no overwriting," so if you wanted to overwrite the last byte in the buffer with the value `0` you would use `buffer.writeUInt8(0, -2)` and if you wanted to read that byte you would use `buffer.readUInt8(-1)`. The reason this was done is so you can do stuff like this:
 ```
 buffer.clear();
 buffer.writeUInt8(5, -1);
