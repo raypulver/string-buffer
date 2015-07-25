@@ -37,3 +37,5 @@ var arr = buffer.toTypedArray(8);
 You can also convert your buffer directly to a `Blob` object by calling `StringBuffer#toBlob(mimeType, bigEndian)`.
 
 Also, you can create a StringBuffer directly from a `Blob` or `File` object using `StringBuffer.fromBlob(blob, cb)` or `StringBuffer.fromFile(file, cb)`. Both these functions are asynchronous and receive an error object as the first argument to the callback, and the StringBuffer as the second argument.
+
+If you are working in a Node.js environment and you need to convert a StringBuffer instance to a Buffer instance, you can use `StringBuffer#toBuffer()` to do so. If you want to get a StringBuffer from a buffer you can pass the buffer to `StringBuffer.fromBuffer(buf)`.
