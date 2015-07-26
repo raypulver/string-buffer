@@ -10,6 +10,11 @@
   var SIGNED_CHAR = 0x01,
       SIGNED_SHORT = 0x03,
       SIGNED_INT = 0x05;
+  var LE = (function () {
+    var arr = new Float32Array(1);
+    arr[0] = 0.125;
+    return arr.buffer[0] === 0;
+  })();
   function typeCheck(val, type) {
     switch (type) { 
       case SIGNED_CHAR:
@@ -31,18 +36,9 @@
         if (val % 1 || val < 0 || val >= Math.pow(2, 32)) typeError(type);
         break;
       case FLOAT:
-        var exp, sig = val, log;
-        sig = Math.abs(sig);
-        log = Math.log(sig)/Math.log(2);
-        if (log < 0) {
-          log = Math.ceil(log);
-        } else {
-          log = Math.floor(log);
-        }
-        exp = 103 + log;
-        if (exp < 0 || exp > 255) typeError(type);
-        sig *= Math.pow(2, -log + 24);
-        if (sig % 1) typeError(type);
+        var arr = new Float32Array(1);
+        arr[0] = val;
+        if (arr[0] !== val) typeError(type);
         break;
       case DOUBLE:
         break;
@@ -662,26 +658,30 @@
     return ret;
   }
   function bytesToFloat(bytes) {
-    var sign = (0x80 & bytes[0]) >>> 7,
-        exp = ((bytes[0] & 0x7F) << 1) + ((bytes[1] & 0x80) >>> 7),
-        sig = 0;
-    bytes[1] &= 0x7F;
-    for (i = 0; i <= 2; ++i) {
-      sig += (bytes[i + 1] << ((2 - i)*8));
+    var arr = new Float32Array(1);
+    if (LE) {
+      for (var i = 0; i < 4; ++i) {
+        arr.buffer[3 - i] = bytes[i];
+      }
+    } else {
+      for (var i = 0; i < 4; ++i) {
+        arr.buffer[i] = bytes[i];
+      }
     }
-    sig |= 0x800000;
-    return shift((sign ? -sig : sig), exp - (127 + 23));
+    return arr[0];
   }
   function bytesToDouble(bytes) {
-    var sign = (0x80 & bytes[0]) >>> 7,
-        exp = ((bytes[0] & 0x7F) << 4) + ((bytes[1] & 0xF0) >>> 4),
-        sig = 0;
-    bytes[1] &= 0x0F;
-    for (i = 0; i <= 6; ++i) {
-      sig += shift(bytes[i + 1], (6 - i)*8);
+    var arr = new Float64Array(1);
+    if (LE) {
+      for (var i = 0; i < 8; ++i) {
+        arr.buffer[7 - i] = bytes[i];
+      }
+    } else {
+      for (var i = 0; i < 8; ++i) {
+        arr.buffer[i] = bytes[i];
+      }
     }
-    sig += 0x10000000000000;
-    return shift((sign ? -sig : sig), exp - (1023 + 52));
+    return arr[0];
   }
   function bytes(val, type) {
     var count, ret = [];
@@ -705,51 +705,29 @@
     } else if (type === (SIGNED | INT)) {
       return (val < 0 ? bytes(complement(-val, 32), INT) : bytes(val, INT));
     } else if (type === FLOAT) {
-      val = +val;
-      var exp = 127, sig = val, sign, log;
-      if (sig < 0) sign = 1;
-      else sign = 0;
-      sig = Math.abs(sig);
-      log = Math.log(sig)/Math.log(2);
-      if (log > 0) {
-        log = Math.floor(log);
+      var arr = new Float32Array(1);
+      arr[0] = val;
+      if (LE) {
+        for (var i = 0; i < 4; ++i) {
+          ret.push(arr.buffer[3 - i]);
+        }
       } else {
-        log = Math.ceil(log);
+        for (var i = 0; i < 8; ++i) {
+          ret.push(arr.buffer[i]);
+        }
       }
-      sig *= Math.pow(2, -log + 23);
-      exp += log;
-      sig = Math.round(sig);
-      sig &= 0x7FFFFF;
-      ret.push(sign << 7);
-      ret[0] += ((exp & 0xFE) >>> 1);
-      ret.push((exp & 0x01) << 7);
-      ret[1] += ((sig >>> 16) & 0x7F);
-      ret.push((sig >>> 8) & 0xFF);
-      ret.push(sig & 0xFF);
       return ret;
     } else if (type === DOUBLE) {
-      val = +val;
-      var exp = 1023, sig = val, sign, log;
-      if (sig < 0) sign = 1;
-      else sign = 0;
-      sig = Math.abs(sig);
-      log = Math.log(sig)/Math.log(2);
-      if (log > 0) {
-        log = Math.floor(log);
+      var arr = new Float64Array(1);
+      arr[0] = val;
+      if (LE) {
+        for (var i = 0; i < 8; ++i) {
+          ret.push(arr.buffer[7 - i]);
+        }
       } else {
-        log = Math.ceil(log);
-      }
-      sig *= Math.pow(2, -log + 52);
-      exp += log;
-      sig = Math.round(sig);
-      sig = parseInt(sig.toString(2).substr(1), 2);
-      ret.push(sign << 7);
-      ret[0] += exp >>> 4;
-      ret.push((exp & 0x0F) << 4);
-      ret[1] += Math.floor(shift(sig, -48)) & 0x0F;
-      var sh = 40;
-      for (var i = 0; i < 6; ++i, sh -= 8) {
-        ret.push(Math.floor(shift(sig, -sh)) & 0xFF);
+        for (var i = 0; i < 8; ++i) {
+          ret.push(arr.buffer[i]);
+        }
       }
       return ret;
     }
