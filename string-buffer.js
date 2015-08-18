@@ -10,11 +10,6 @@
   var SIGNED_CHAR = 0x01,
       SIGNED_SHORT = 0x03,
       SIGNED_INT = 0x05;
-  var LE = (function () {
-    var arr = new Float32Array(1);
-    arr[0] = 0.125;
-    return arr.buffer[0] === 0;
-  })();
   function typeCheck(val, type) {
     switch (type) { 
       case SIGNED_CHAR:
@@ -658,30 +653,26 @@
     return ret;
   }
   function bytesToFloat(bytes) {
-    var arr = new Float32Array(1);
-    if (LE) {
-      for (var i = 0; i < 4; ++i) {
-        arr.buffer[3 - i] = bytes[i];
-      }
-    } else {
-      for (var i = 0; i < 4; ++i) {
-        arr.buffer[i] = bytes[i];
-      }
+    var sign = ((0x80 & bytes[0]) >> 7);
+    var exp = ((bytes[0] & 0x7F) << 1) | ((bytes[1] & 0x80) >> 7);
+    var sig = 0;
+    bytes[1] &= 0x7F;
+    for (var i = 0; i <= 2; ++i) {
+      sig |= bytes[i + 1]*Math.pow(2, (2 - i)*8);
     }
-    return arr[0];
+    sig |= 0x800000;
+    return (sign === 1 ? -sig : sig)*Math.pow(2, exp - (127 + 23));
   }
   function bytesToDouble(bytes) {
-    var arr = new Float64Array(1);
-    if (LE) {
-      for (var i = 0; i < 8; ++i) {
-        arr.buffer[7 - i] = bytes[i];
-      }
-    } else {
-      for (var i = 0; i < 8; ++i) {
-        arr.buffer[i] = bytes[i];
-      }
+    var sign = (0x80 & bytes[0]) >> 7;
+    var exp = ((bytes[0] & 0x7F) << 4) | ((bytes[1] & 0xF0) >> 4);
+    var sig = 0;
+    bytes[1] &= 0x0F;
+    for (var i = 0; i <= 6; ++i) {
+      sig += bytes[i + 1]*Math.pow(2, (6 - i)*8);
     }
-    return arr[0];
+    sig += 0x10000000000000;
+    return (sign === 1 ? -sig : sig)*Math.pow(2, exp - (1023 + 52));
   }
   function bytes(val, type) {
     var count, ret = [];
@@ -705,29 +696,45 @@
     } else if (type === (SIGNED | INT)) {
       return (val < 0 ? bytes(complement(-val, 32), INT) : bytes(val, INT));
     } else if (type === FLOAT) {
-      var arr = new Float32Array(1);
-      arr[0] = val;
-      if (LE) {
-        for (var i = 0; i < 4; ++i) {
-          ret.push(arr.buffer[3 - i]);
-        }
-      } else {
-        for (var i = 0; i < 8; ++i) {
-          ret.push(arr.buffer[i]);
-        }
-      }
+      var exp = 127, sign, log, ret = [];
+      if (val < 0) sign = 1;
+      else sign = 0;
+      val = Math.abs(val);
+      log = Math.log(val)/Math.LN2;
+      if (log < 0) log = Math.ceil(log);
+      else log = Math.floor(log);
+      val *= Math.pow(2, -log + 23);
+      exp += log;
+      val = Math.round(val);
+      val &= 0x7FFFFF;
+      ret.push(sign << 7);
+      ret[0] |= ((exp & 0xFE) >> 1);
+      ret.push((exp & 0x01) << 7);
+      ret[1] |= ((val >> 16) & 0x7F);
+      ret.push((val >> 8) & 0xFF);
+      ret.push(val & 0xFF);
       return ret;
     } else if (type === DOUBLE) {
-      var arr = new Float64Array(1);
-      arr[0] = val;
-      if (LE) {
-        for (var i = 0; i < 8; ++i) {
-          ret.push(arr.buffer[7 - i]);
-        }
-      } else {
-        for (var i = 0; i < 8; ++i) {
-          ret.push(arr.buffer[i]);
-        }
+      var exp = 1023, sign, log;
+      if (val < 0) sign = 1;
+      else sign = 0;
+      val = Math.abs(val);
+      log = Math.log(val)/Math.LN2;
+      if (log < 0) log = Math.ceil(log);
+      else log = Math.floor(log);
+      val *= Math.pow(2, -log + 52);
+      exp += log;
+      val = Math.round(val);
+      val = parseInt(val.toString(2).substr(1), 2);
+      var ret = [];
+      ret.push(sign << 7);
+      ret[0] |= (exp >> 4);
+      ret.push((exp & 0x0F) << 4);
+      ret[1] |= (Math.floor(val*Math.pow(2, -48)) & 0x0F);
+      var sh = 40;
+      for (var i = 0; i < 6; ++i) {
+        ret.push(Math.floor(val*Math.pow(2, -sh)) & 0xFF);
+        sh -= 8;
       }
       return ret;
     }
